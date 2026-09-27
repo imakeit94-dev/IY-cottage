@@ -1,0 +1,285 @@
+/* Low-amplitude motion; all layout dimensions remain in index.html. */
+.page{transition:color .95s ease-in-out;isolation:isolate}.ambient-layer{position:absolute;inset:0;z-index:0;pointer-events:none}.copy,.top,.controls,.foot{transition:color .95s ease-in-out}.visual{transform:translate(var(--px,0px),var(--py,0px));transition:transform 1.4s cubic-bezier(.2,.6,.25,1),filter .95s ease-in-out}.visual img{transition:filter .95s ease-in-out}
+
+/* ==========================================================================
+   昼夜环境 —— 不只换背景色：环境亮度 / 小屋明暗 / 暗角 / 粒子可见度一起跟着走
+   ========================================================================== */
+.page.day .visual{filter:brightness(1.03) saturate(1.02) contrast(.985)}
+.page.sunset .visual{filter:brightness(.97) saturate(1.05) contrast(1.01)}
+.page.night .visual{filter:brightness(.85) saturate(.96) contrast(1.02)}
+.time-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .95s ease-in-out;background:radial-gradient(ellipse 86% 84% at 58% 50%,transparent 54%,rgba(9,11,24,.46) 100%)}
+.page.sunset .time-vignette{opacity:.36}
+.page.night .time-vignette{opacity:1}
+.house-breath{position:relative;width:100%;height:100%;animation:house-breath 9s ease-in-out infinite}.house-breath>#house{position:absolute;inset:0}.tree-breeze{position:absolute;inset:0;pointer-events:none;transform-origin:67% 43%;animation:tree-breeze 7.5s ease-in-out infinite;mask-image:radial-gradient(ellipse 10% 12% at 66.5% 30%,#000 58%,transparent 95%);-webkit-mask-image:radial-gradient(ellipse 10% 12% at 66.5% 30%,#000 58%,transparent 95%)}.visual .tree-breeze img{mask-image:none;-webkit-mask-image:none;width:100%;height:100%}
+.window-glow,.window-boost{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse 1.5% 2.4% at 45% 45.4%,#ffc574 0,transparent 100%),radial-gradient(ellipse 1.5% 2.4% at 51.4% 43.2%,#ffd18c 0,transparent 100%),radial-gradient(ellipse 1.5% 2.4% at 57.8% 41%,#ffd18c 0,transparent 100%),radial-gradient(ellipse 1.2% 1.4% at 52.4% 37.8%,#ffd18c 0,transparent 100%)}
+.window-glow{animation:window-breath 8s ease-in-out infinite;opacity:.045}
+/* 点窗户后额外叠的一层暖光：比常态更大更亮，柔和抬起 */
+.window-boost{opacity:0;transform:scale(1.6);transform-origin:51.4% 43.2%;transition:opacity .9s ease-in-out}
+.window-boost.on{opacity:.21}
+.page.day .window-glow{display:none}
+.page.day .window-boost.on{opacity:.10}
+.page.sunset .window-glow{animation-name:window-breath-dusk}
+
+/* ==========================================================================
+   门廊灯 —— 亮 / 暗两态柔和切换；Day 弱、Sunset 中、Night 强
+   .lamp-wrap 只负责时间强度（可直接过渡），.lamp-glow / .lamp-dim 负责开关两态
+   ========================================================================== */
+.lamp-wrap{position:absolute;inset:0;pointer-events:none;opacity:.35;transition:opacity .95s ease-in-out}
+.page.sunset .lamp-wrap{opacity:.85}
+.page.night .lamp-wrap{opacity:1}
+.lamp-glow,.lamp-dim{position:absolute;inset:0;pointer-events:none;transition:opacity .9s ease-in-out}
+.lamp-glow{mix-blend-mode:screen;opacity:1;background:radial-gradient(ellipse 8% 7% at 53.5% 54.5%,rgba(255,196,124,.95) 0,transparent 100%),radial-gradient(ellipse 13% 11% at 53.5% 54%,rgba(255,178,104,.42) 0,transparent 100%),radial-gradient(ellipse 19% 15% at 52.5% 52.5%,rgba(255,168,96,.16) 0,transparent 100%)}
+.lamp-dim{mix-blend-mode:multiply;opacity:0;background:radial-gradient(ellipse 11% 9% at 53.5% 54.5%,rgba(96,74,86,.72) 0,transparent 100%),radial-gradient(ellipse 17% 13% at 53.5% 54%,rgba(120,98,108,.42) 0,transparent 100%)}
+.visual.lamp-off .lamp-glow{opacity:0}
+.visual.lamp-off .lamp-dim{opacity:1}
+
+/* ==========================================================================
+   小屋互动热点 —— 极轻的悬停提示，不成按钮状
+   ========================================================================== */
+.hotspots,.fx-layer{position:absolute;inset:0;pointer-events:none}
+.fx-layer{z-index:2}
+.hotspots{z-index:3}
+.hotspot{position:absolute;left:var(--hx);top:var(--hy);width:var(--hw);height:var(--hh);transform:translate(-50%,-50%);border:0;background:none;padding:0;border-radius:50%;pointer-events:auto;cursor:pointer}
+.hotspot::after{content:'';position:absolute;inset:-22%;border-radius:50%;opacity:0;transition:opacity .55s ease;background:radial-gradient(circle,rgba(255,226,178,.30) 0,transparent 68%)}
+.hotspot:hover::after,.hotspot:focus-visible::after{opacity:1}
+.hotspot:focus-visible{outline:0}
+/* 进入小屋后给一次很淡的“呼吸”，让用户知道这几处可以点；之后收回到仅悬停 */
+.hotspot.hint::after{opacity:.34;animation:hotspot-hint 3.4s ease-in-out 3}
+@keyframes hotspot-hint{0%,100%{opacity:.06}50%{opacity:.34}}
+/* 坐标由原图（1500×1280，与 .visual 盒子宽高比几乎相同，故百分比可直接换算）逐像素标定 */
+.hs-window{--hx:51.5%;--hy:43.5%;--hw:9.5%;--hh:12%}
+.hs-guitar{--hx:45.2%;--hy:56%;--hw:7.5%;--hh:11%}
+.hs-lamp{--hx:56%;--hy:56.5%;--hw:11%;--hh:11%}
+
+/* 窗户点击后的一句轻提示，3s 后自行淡出 */
+.cue{position:absolute;left:46.5%;top:49.4%;width:250px;z-index:4;pointer-events:none;font-family:'Songti SC','Noto Serif CJK SC',serif;font-size:15px;letter-spacing:.07em;line-height:1.6;color:#ffeed8;text-shadow:0 1px 3px rgba(22,11,7,.95),0 2px 10px rgba(22,11,7,.8),0 0 22px rgba(255,180,110,.34);opacity:0;transform:translateY(6px);transition:opacity .85s ease,transform .85s cubic-bezier(.25,.5,.3,1)}
+.cue.on{opacity:1;transform:none}
+@keyframes house-breath{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes tree-breeze{0%,100%{transform:rotate(-.12deg)}50%{transform:rotate(.15deg)}}
+@keyframes window-breath{0%,100%{opacity:.025}50%{opacity:.105}}@keyframes window-breath-dusk{0%,100%{opacity:.015}50%{opacity:.055}}
+.motion-paused *{animation-play-state:paused!important}.motion-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* ==========================================================================
+   Weather — 四季天气层
+   层内粒子由 motion.js 生成；数量参数在 motion.js 顶部的 WEATHER_CONFIG。
+   ========================================================================== */
+.weather-tint{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .9s ease;background:linear-gradient(180deg,rgba(30,46,74,.19) 0%,rgba(34,50,78,.07) 44%,rgba(28,44,70,.13) 100%)}
+.weather-tint.on{opacity:1}
+.visual.rain img{filter:saturate(.93) brightness(.955) contrast(1.02)}
+.weather-layer{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;opacity:0;transition:opacity .42s ease-in,filter .95s ease-in-out;mask-image:linear-gradient(to bottom,transparent 0%,#000 9%,#000 88%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 9%,#000 88%,transparent 100%)}
+/* 打开时粒子在 0.95s 内逐渐浮现；关闭时 0.42s 淡出；换季先淡出再淡入，不硬切 */
+.weather-layer.on{opacity:1;transition:opacity .95s ease-out,filter .95s ease-in-out}
+.page.day .weather-layer{filter:brightness(1.08)}
+.page.sunset .weather-layer{filter:brightness(1)}
+.page.night .weather-layer{filter:brightness(.88) saturate(.94)}
+.weather-layer>i{position:absolute;left:var(--x);top:-8%;display:block}
+
+/* Spring · 花瓣：不对称花瓣形（非圆点、非雪片），粉 / 白粉 / 桃色，缓慢飘落 + 横向漂移 + 旋转。
+   少数花瓣带 --sc 放大 + --b 模糊，制造轻微景深（更靠近镜头）。 */
+.w-petal{width:var(--s);height:calc(var(--s)*.76);border-radius:100% 4% 100% 4%;opacity:0;background:linear-gradient(132deg,var(--c1) 0%,var(--c2) 46%,var(--c3) 100%);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.55);filter:blur(var(--b,0px)) drop-shadow(0 1px 2px rgba(150,74,110,.26));animation:w-petal var(--d) cubic-bezier(.45,.05,.55,.95) var(--dl) infinite}
+@keyframes w-petal{0%{transform:translate3d(0,-42px,0) rotate(var(--r0)) scale(var(--sc));opacity:0}8%{opacity:var(--o)}30%{transform:translate3d(calc(var(--sway)*.9px),252px,0) rotate(calc(var(--r0) + 96deg)) scale(var(--sc))}58%{transform:translate3d(calc(var(--sway)*-.55px),524px,0) rotate(calc(var(--r0) + 210deg)) scale(var(--sc))}86%{opacity:var(--o)}100%{transform:translate3d(calc(var(--sway)*.42px),900px,0) rotate(calc(var(--r0) + 330deg)) scale(var(--sc));opacity:0}}
+
+/* Summer · 暴雨：细长快速雨线，斜向下落 */
+.w-rain{width:1px;height:var(--h);border-radius:1px;opacity:0;background:linear-gradient(to bottom,rgba(206,228,255,0),rgba(232,243,255,.95));animation:w-rain var(--d) linear var(--dl) infinite}
+@keyframes w-rain{0%{transform:translate3d(0,-290px,0) rotate(9deg);opacity:0}4%{opacity:var(--o)}86%{opacity:var(--o)}100%{transform:translate3d(-152px,880px,0) rotate(9deg);opacity:0}}
+
+/* Autumn · 落叶：黄橙褐，缓慢飘落，带旋转与横向风感 */
+.w-leaf{width:var(--s);height:calc(var(--s)*.8);background:var(--c);border-radius:64% 8% 64% 8%;opacity:0;animation:w-leaf var(--d) ease-in-out var(--dl) infinite}
+@keyframes w-leaf{0%{transform:translate3d(0,-40px,0) rotate(var(--r0));opacity:0}7%{opacity:var(--o)}30%{transform:translate3d(calc(var(--sway)*.8px),250px,0) rotate(calc(var(--r0) + 110deg))}62%{transform:translate3d(calc(var(--sway)*-.5px),570px,0) rotate(calc(var(--r0) + 230deg))}90%{opacity:var(--o)}100%{transform:translate3d(calc(var(--sway)*.5px),905px,0) rotate(calc(var(--r0) + 350deg));opacity:0}}
+
+/* Winter · 雪花：大小略有差异，缓慢下落 + 轻微横向漂移 */
+.w-snow{width:var(--s);height:var(--s);border-radius:50%;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.98) 0%,rgba(235,244,255,.76) 52%,rgba(228,240,255,0) 100%);animation:w-snow var(--d) linear var(--dl) infinite}
+@keyframes w-snow{0%{transform:translate3d(0,-30px,0);opacity:0}8%{opacity:var(--o)}50%{transform:translate3d(calc(var(--sway)*.9px),455px,0)}90%{opacity:var(--o)}100%{transform:translate3d(calc(var(--sway)*-.6px),905px,0);opacity:0}}
+
+@media(prefers-reduced-motion:reduce){.house-breath,.tree-breeze,.window-glow{animation:none!important}.tree-breeze,.window-glow{display:none}.weather-layer,.weather-tint{display:none}.visual{transform:none!important;transition:none}.page,.copy,.top,.controls,.foot{transition:none!important}.hotspot.hint::after{animation:none!important;opacity:0!important}.sound-btn[aria-pressed=true] .sb-icon{animation:none!important}}
+
+/* ==========================================================================
+   Prologue — 首页序章 / 回家按钮 / 镜头推进感
+   文案节奏参数在 motion.js 顶部的 PROLOGUE_TIMING；推进关键帧在 PUSH_FRAMES。
+   ========================================================================== */
+.prologue{position:absolute;inset:0;z-index:20;overflow:hidden;
+--pl-strong:#f4e4d2;--pl-soft:rgba(232,211,193,.68);--pl-accent:#f0cfa4;
+background:radial-gradient(ellipse 42% 50% at 66% 56%,rgba(160,110,138,.22) 0,transparent 76%),radial-gradient(ellipse 40% 44% at 70% 58%,rgba(255,166,94,.14) 0,transparent 72%),linear-gradient(108deg,#1a141c 0%,#241b23 22%,#33252f 48%,#452f3b 76%,#4e3441 100%)}
+
+/* 与主页面 .visual 完全同一套几何 + 横向渐隐遮罩，保证进出场不跳位 */
+.prologue-stage{position:absolute;width:1040px;height:888px;right:-36px;top:-28px;pointer-events:none;mask-image:linear-gradient(to right,transparent 0%,#000 15%,#000 91%,transparent 100%);-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 15%,#000 91%,transparent 100%);mask-repeat:no-repeat;-webkit-mask-repeat:no-repeat;mask-size:100% 100%;-webkit-mask-size:100% 100%}
+/* transform-origin 对准门廊（约 48% / 56%），scale 放大即模拟「沿石板路向门廊靠近」 */
+.prologue-camera{position:absolute;inset:0;transform-origin:48% 56%;will-change:transform,filter}
+.prologue-camera img{width:100%;height:100%;object-fit:contain;filter:saturate(.94) brightness(.80) contrast(1.03) hue-rotate(-4deg);mask-image:linear-gradient(to bottom,transparent 2%,#000 20%,#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 2%,#000 20%,#000 85%,transparent 100%)}
+
+.prologue-warmth{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse 30% 32% at 57% 56%,rgba(255,178,104,.32) 0,transparent 70%),radial-gradient(ellipse 44% 46% at 60% 54%,rgba(255,201,140,.13) 0,transparent 76%)}
+.prologue-vignette{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse 58% 54% at 60% 52%,transparent 30%,rgba(9,6,12,.78) 100%)}
+
+.prologue-copy{position:absolute;left:88px;top:24%;width:580px;z-index:3;display:flex;flex-direction:column;align-items:flex-start}
+.pl{margin:0;font-family:'Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;font-weight:400;opacity:0;transform:translateY(16px);transition:opacity 1.6s cubic-bezier(.25,.5,.3,1),transform 1.6s cubic-bezier(.25,.5,.3,1)}
+.pl.in{opacity:1;transform:none}
+.pl-1{font-size:21px;letter-spacing:.22em;color:var(--pl-soft);margin-bottom:38px}
+.pl-1::before{content:'';display:block;width:32px;height:1px;background:var(--pl-accent);opacity:.55;margin-bottom:20px}
+.pl-2{font-size:29px;line-height:1.95;letter-spacing:.03em;color:var(--pl-strong)}
+.pl-3{font-size:29px;line-height:1.95;letter-spacing:.03em;color:var(--pl-accent)}
+.pl-gap{margin-top:46px}
+
+.home-btn{margin-top:58px;padding:16px 52px;border-radius:44px;border:1px solid rgba(246,225,195,.32);background:rgba(245,223,186,.09);color:#f8e8d2;font-family:'Songti SC','Noto Serif CJK SC',serif;font-size:17px;letter-spacing:.36em;text-indent:.36em;pointer-events:none;opacity:0;transform:translateY(14px);transition:opacity 1.3s cubic-bezier(.25,.5,.3,1),transform 1.3s cubic-bezier(.25,.5,.3,1),background .55s ease,box-shadow .55s ease,color .55s ease,border-color .55s ease}
+.home-btn.in{opacity:1;transform:none;pointer-events:auto}
+.home-btn:hover{background:rgba(245,223,186,.19);border-color:rgba(255,236,205,.46);color:#fff2df;box-shadow:0 0 0 1px rgba(255,236,205,.16),0 12px 38px rgba(255,186,116,.16)}
+.home-btn.in:active{transform:scale(.962)}
+.home-btn:focus-visible{outline:2px solid rgba(248,232,210,.72);outline-offset:6px}
+
+.prologue-tools{position:absolute;top:44px;right:68px;z-index:4;display:flex;align-items:center;gap:26px}
+.prologue-skip{border:0;background:none;color:rgba(216,196,182,.46);font-family:'PingFang SC','Microsoft YaHei',sans-serif;font-size:11px;letter-spacing:.2em;padding:6px 2px;pointer-events:none;opacity:0;transition:opacity 1s ease,color .4s ease}
+.prologue-skip.in{opacity:1;pointer-events:auto}
+.prologue-skip:hover{color:rgba(246,228,210,.88)}
+.prologue-skip::after{content:'';display:block;height:1px;margin-top:5px;background:currentColor;opacity:.4;transform:scaleX(0);transform-origin:right;transition:transform .45s ease}
+.prologue-skip:hover::after{transform:scaleX(1)}
+
+.prologue-veil{position:absolute;inset:0;z-index:30;pointer-events:none;opacity:0;background:radial-gradient(ellipse 74% 70% at 58% 50%,#0c0910 0%,#060409 100%)}
+
+/* ==========================================================================
+   背景音乐开关 —— 主页面右上角与序章右上角各一枚，共享同一播放状态
+   ========================================================================== */
+.top-right{display:flex;align-items:center;gap:30px}
+.sound-btn{display:flex;align-items:center;gap:9px;padding:8px 15px 8px 13px;border-radius:30px;border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--muted);font-size:9px;letter-spacing:.2em;font-family:Arial,Helvetica,sans-serif;opacity:.82;transition:color .5s ease,background .5s ease,border-color .5s ease,box-shadow .5s ease,opacity .5s ease}
+.sound-btn:hover{background:rgba(245,223,186,.10);color:var(--accent);opacity:1}
+.sound-btn .sb-icon{font-size:13px;line-height:1;letter-spacing:0}
+.sound-btn .sb-text{line-height:1.5}
+.sound-btn[aria-pressed=true]{color:var(--accent);border-color:rgba(238,210,163,.42);background:rgba(245,223,186,.10);box-shadow:0 0 16px rgba(238,210,163,.14);opacity:1}
+.sound-btn[aria-pressed=true] .sb-icon{animation:sound-pulse 3.2s ease-in-out infinite}
+@keyframes sound-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.sound-btn.unavailable{opacity:.42}
+.prologue-tools .sound-btn{border-color:rgba(246,225,195,.24);background:rgba(245,223,186,.055);color:rgba(226,205,186,.60);opacity:0;pointer-events:none;transition:opacity 1s ease,color .5s ease,background .5s ease,border-color .5s ease,box-shadow .5s ease}
+.prologue-tools .sound-btn.in{opacity:.95;pointer-events:auto}
+.prologue-tools .sound-btn:hover{opacity:1;color:var(--pl-accent);background:rgba(245,223,186,.12)}
+.prologue-tools .sound-btn[aria-pressed=true]{color:var(--pl-accent);border-color:rgba(240,207,164,.45);background:rgba(245,223,186,.11);box-shadow:0 0 16px rgba(240,207,164,.16);opacity:1}
+
+/* 窄屏（<1450px）序章文案收一档，避免与右侧小屋重叠；主页面布局不变 */
+@media(max-width:1450px){.prologue-copy{width:500px}.pl-2,.pl-3{font-size:25px}.pl-1{font-size:19px;margin-bottom:30px}.pl-gap{margin-top:36px}.home-btn{margin-top:46px;padding:14px 44px;font-size:16px}}
+
+@media(prefers-reduced-motion:reduce){.pl,.home-btn,.prologue-skip{transition:opacity .3s ease!important;transform:none!important}.prologue-camera{transform:none!important}}
+
+/* ==========================================================================
+   移动端（手机竖屏）—— 375 / 390 / 430 为主要设计宽度
+   全部集中在这一个断点里，桌面端既有声明一条都没有改动。
+   布局思路：顶部栏 → 小屋主视觉（完整不裁切）→ 文案 → 三组控件 → 页脚
+   ========================================================================== */
+@media (max-width:900px){
+/* ---------- 页面骨架：从「固定一屏的绝对定位画布」改为可纵向滚动的文档流 ---------- */
+.page{display:flex;flex-direction:column;min-width:0;width:100%;height:auto;min-height:100vh;min-height:100svh;overflow:visible}
+/* 序章是 fixed 覆盖层，出现期间锁住页面滚动，避免背景长页跟着动。
+   注意 overflow:hidden 只拦手势滚动、不拦程序化 scrollTo，
+   所以再叠 overscroll-behavior / touch-action，把移动端手势也一并拦掉 */
+html.prologue-open,html.prologue-open body{overflow:hidden;overscroll-behavior:none}
+html.prologue-open body{touch-action:none}
+/* 暗角改为跟随视口，否则会跑到长页的中点去 */
+.time-vignette{position:fixed}
+
+/* ---------- 顶部栏 ---------- */
+.top{position:relative;order:1;inset:auto;padding:calc(env(safe-area-inset-top) + 12px) 16px 2px;gap:8px}
+.mark{width:26px;height:28px}
+.brand{gap:9px}
+.brand-name{font-size:16px;letter-spacing:.06em}
+.brand-note{display:none}                       /* 副标题手机上省掉，给主体让宽度 */
+.top-right{gap:12px}
+.dedication{gap:8px;font-size:8.5px;letter-spacing:.06em}
+.dedication span:first-child{font-size:13px}
+/* 音乐按钮改为纯图标 44×44，既是标准触控尺寸，也完全不挤占内容 */
+.sound-btn{width:44px;height:44px;justify-content:center;padding:0;gap:0}
+.sound-btn .sb-text{display:none}
+.sound-btn .sb-icon{font-size:16px}
+
+/* ---------- 小屋主视觉：整幅画面按原始比例完整显示，不做任何裁切 ---------- */
+.visual{position:relative;order:2;left:auto;right:auto;top:auto;width:100%;height:auto;aspect-ratio:1500/1280;z-index:1;overflow:hidden;
+mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);
+-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%)}
+/* 手机端 .page 不再裁切，装饰层（.window-boost 是 scale(1.6) 的整幅图层）
+   会溢出去把文档撑宽，所以改由 .visual 自己裁 */
+/* 手机上暂不叠加树冠微动：那是一个整幅大小的带遮罩旋转层，
+   逐帧合成成本最高而 0.15° 的幅度在手机上基本看不见，省掉换流畅度 */
+.tree-breeze{display:none}
+/* 热区：百分比之外加 44px 下限，避免在小屏上缩成针尖、必须精准点中模型 */
+.hotspot{width:max(var(--hw),44px);height:max(var(--hh),44px);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.hotspot::after{inset:-14%}
+/* 点击后的那句提示按屏宽收窄，保证不超出（.visual 现已裁切） */
+.cue{left:34%;top:50.5%;width:60%;font-size:13.5px;line-height:1.55}
+}
+
+/* ---------- 文案区：小屋下方，保留 眉标 → 标题 → 正文 → 英文 的层级 ---------- */
+@media (max-width:900px){
+.copy{position:relative;order:3;left:auto;top:auto;width:auto;padding:6px 16px 0}
+.eyebrow{gap:9px;font-size:10px;letter-spacing:.16em}
+.eyebrow .rule{width:24px}
+h1{font-size:clamp(25px,7.1vw,31px);line-height:1.5;letter-spacing:.004em;margin:14px 0 12px}
+h1.long{font-size:clamp(22px,6.2vw,27px)}
+.body{font-size:14.5px;line-height:1.85;max-width:none}
+.personal{font-size:12.5px;margin-top:12px}
+
+/* ---------- 三组控件：竖排三组，各自一行横向可滑；不挤成多行 ---------- */
+.controls{position:relative;order:4;left:auto;right:auto;bottom:auto;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:13px;border-top:1px solid var(--line);padding:17px 16px 4px;margin-top:16px}
+.control-intro{width:auto}
+.control-intro strong{font-size:15px}
+.control-intro p{font-size:10px;margin-top:5px}
+.group{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:100%}
+.group-label{font-size:9px;letter-spacing:.16em}
+/* 触屏胶囊行：整体可横向滑动，隐藏滚动条，滑到底能看到完整最后一颗 */
+.tabs{width:100%;padding:5px;gap:4px;border-radius:34px;
+overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;
+scrollbar-width:none;-ms-overflow-style:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;min-height:44px;min-width:56px;padding:11px 16px;font-size:12.5px;gap:7px;scroll-snap-align:start;
+touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tab .icon{font-size:14px}
+
+/* ---------- 页脚 ---------- */
+.foot{position:relative;order:5;left:auto;right:auto;bottom:auto;padding:16px 16px calc(env(safe-area-inset-bottom) + 14px);font-size:8.5px;letter-spacing:.1em;gap:8px}
+}
+
+/* ==========================================================================
+   移动端 · 序章 —— 上「小屋」下「文案」的竖排，小屋不被文字压住
+   镜头推进的关键帧本身不动（PUSH_FRAMES），只把舞台几何换成竖屏比例，
+   transform-origin 48%/56% 依旧落在门廊上，所以推进感在手机上照样成立。
+   ========================================================================== */
+@media (max-width:900px){
+/* fixed 到视口：序章文案的 top 百分比才对「一屏」成立，而不是对整条长页 */
+.prologue{position:fixed}
+/* 舞台回到满宽、严格保持原图比例（1500×1280）→ 一个字都不裁。
+   高度刻意做成图高的 2.1 倍：镜头放大到 2.9 倍时小屋仍不会碰到舞台下边界，
+   否则会被舞台盒子硬切出一条横线（桌面端舞台远大于可视区，所以没有这个问题）。
+   图片靠上显示，下方留白什么也不画。 */
+.prologue-stage{left:0;right:auto;width:100%;height:calc(100vw * 1.792);top:calc(env(safe-area-inset-top) + 6px);
+mask-image:linear-gradient(to right,transparent 0%,#000 4%,#000 96%,transparent 100%);
+-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 4%,#000 96%,transparent 100%)}
+/* 图片顶部对齐；自身那层上下渐隐要按「实际画出来的高度」定尺寸，
+   否则渐隐会落到元素框（2.1 倍高）的底部、对图片毫无作用 */
+.prologue-camera img{object-position:top center;
+mask-size:100% calc(100vw * .8533);
+-webkit-mask-size:100% calc(100vw * .8533)}
+/* transform-origin 仍锁在门廊：门廊在原图 48%/56% 处，即距舞台顶 0.56 倍图高。
+   改用视口相对的绝对长度表达，375 / 390 / 430 都自动对准。 */
+.prologue-camera{transform-origin:48% calc(100vw * .4779)}
+/* 文案压在图片自身由上而下渐隐的那一段之后，视觉上不会盖住小屋。
+   用 calc 跟着图高走，所以矮屏（667）也不会顶到小屋上。 */
+.prologue-copy{left:0;right:0;top:calc(env(safe-area-inset-top) + 6px + 100vw * .82);width:auto;padding:0 22px;align-items:flex-start}
+.pl-1{font-size:19px;letter-spacing:.18em;margin-bottom:24px}
+.pl-1::before{width:26px;margin-bottom:14px}
+.pl-2,.pl-3{font-size:20px;line-height:1.9;letter-spacing:.02em}
+.pl-gap{margin-top:26px}
+/* 按钮明显但克制：左对齐跟随文案，48px 高满足触控 */
+.home-btn{margin-top:26px;padding:15px 42px;min-height:48px;font-size:16px;letter-spacing:.3em;text-indent:.3em}
+/* 工具条：贴安全区，两枚按钮都给到 44px 触控高度 */
+.prologue-tools{top:calc(env(safe-area-inset-top) + 10px);right:12px;gap:12px}
+.prologue-skip{padding:12px 6px;font-size:11px}
+.prologue-veil{position:fixed}
+}
+
+/* 矮屏兜底（如 iPhone SE 667px）：整体再收一档，保证序章文案与按钮不溢出。
+   top 不用改——它由 calc(100vw) 决定，已经跟着矮屏自动上移了。 */
+@media (max-width:900px) and (max-height:730px){
+.pl-1{font-size:17px;margin-bottom:18px}
+.pl-2,.pl-3{font-size:17.5px;line-height:1.82}
+.pl-gap{margin-top:20px}
+.home-btn{margin-top:20px;min-height:44px;padding:13px 36px;font-size:15px}
+.visual{max-height:44svh;width:auto;margin:0 auto}
+h1{font-size:clamp(22px,6.4vw,27px);margin:12px 0 10px}
+.body{font-size:14px}
+.controls{gap:11px;padding-top:14px;margin-top:13px}
+.tab{min-height:44px;padding:10px 15px}
+}

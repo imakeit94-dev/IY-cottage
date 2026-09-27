@@ -1,0 +1,18 @@
+# --- 操作系统 / 编辑器杂项 ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+*.swp
+*~
+
+# --- 日志 ---
+*.log
+npm-debug.log*
+
+# --- 依赖与部署工具（本项目零依赖，仅防误提交）---
+node_modules/
+.vercel
+.vercelignore
