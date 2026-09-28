@@ -1,0 +1,52 @@
+/* Living diorama colour system and low-amplitude transition polish. */
+.page{
+  --halo-core:rgba(255,226,177,.13);
+  --halo-back:rgba(255,239,207,.075);
+  --halo-ground:rgba(58,45,38,.12);
+  transition:color 1.45s ease-in-out,background-color 1.55s ease-in-out;
+}
+
+/* Each state keeps its own quiet colour temperature. The old gradient is
+   retained in .ambient-layer while the new one appears underneath it. */
+.page.season-spring.day{background:radial-gradient(ellipse at 83% 72%,#dce2d2 0,transparent 58%),linear-gradient(120deg,#c5cebf,#d8d7c7 54%,#c9d6c4);--muted:#59675b;--accent:#526a4d;--halo-core:rgba(255,239,194,.15);--halo-back:rgba(190,225,186,.12)}
+.page.season-summer.day{background:radial-gradient(ellipse at 84% 72%,#d8d7c7 0,transparent 58%),linear-gradient(120deg,#b8c2ad,#cbc9b7 54%,#b7c5ae);--muted:#586258;--accent:#526044;--halo-core:rgba(255,226,168,.15);--halo-back:rgba(202,223,183,.10)}
+.page.season-autumn.day{background:radial-gradient(ellipse at 84% 72%,#ddc9a9 0,transparent 58%),linear-gradient(120deg,#c6b292,#d2c1a6 54%,#bfa888);--muted:#695f50;--accent:#72563c;--halo-core:rgba(255,211,140,.17);--halo-back:rgba(208,160,103,.11)}
+.page.season-winter.day{background:radial-gradient(ellipse at 84% 70%,#dae1e3 0,transparent 59%),linear-gradient(120deg,#bdc8cc,#d4d7d4 54%,#b9c7ce);--muted:#56636a;--accent:#596872;--halo-core:rgba(255,225,173,.13);--halo-back:rgba(191,220,234,.16)}
+
+.page.season-spring.sunset{background:radial-gradient(ellipse at 83% 72%,#c98779 0,transparent 58%),linear-gradient(120deg,#6a485b,#8a5968 52%,#9e6f78);--muted:#dbc2c3;--accent:#f0d2ae;--halo-core:rgba(255,181,115,.28);--halo-back:rgba(231,151,165,.17)}
+.page.season-summer.sunset{background:radial-gradient(ellipse at 84% 75%,#ae6853 0,transparent 57%),linear-gradient(120deg,#503744,#684151 51%,#795365);--muted:#d0b8b5;--accent:#eed2a3;--halo-core:rgba(255,167,86,.31);--halo-back:rgba(231,124,111,.18)}
+.page.season-autumn.sunset{background:radial-gradient(ellipse at 83% 73%,#a85f3d 0,transparent 57%),linear-gradient(120deg,#523832,#704335 52%,#845b42);--muted:#d8bba6;--accent:#f0c98b;--halo-core:rgba(255,158,65,.32);--halo-back:rgba(196,100,60,.19)}
+.page.season-winter.sunset{background:radial-gradient(ellipse at 83% 71%,#9a6f78 0,transparent 58%),linear-gradient(120deg,#4c475c,#655568 52%,#7b6574);--muted:#c8bec9;--accent:#eed0ae;--halo-core:rgba(255,184,109,.26);--halo-back:rgba(173,174,215,.19)}
+
+.page.season-spring.night{background:radial-gradient(ellipse at 81% 69%,#354263 0,transparent 59%),linear-gradient(115deg,#1a2138,#1b253e 54%,#292847);--muted:#abb2c9;--accent:#efd2a6;--halo-core:rgba(255,188,92,.25);--halo-back:rgba(91,102,157,.20)}
+.page.season-summer.night{background:radial-gradient(ellipse at 81% 68%,#263f56 0,transparent 59%),linear-gradient(115deg,#121e31,#10243a 55%,#162b40);--muted:#a5b5c5;--accent:#edcf9e;--halo-core:rgba(255,186,87,.27);--halo-back:rgba(57,91,121,.22)}
+.page.season-autumn.night{background:radial-gradient(ellipse at 81% 68%,#483b52 0,transparent 59%),linear-gradient(115deg,#201b29,#2b2232 54%,#3d2b38);--muted:#b8a9b5;--accent:#eac18c;--halo-core:rgba(255,176,75,.28);--halo-back:rgba(104,70,89,.22)}
+.page.season-winter.night{background:radial-gradient(ellipse at 81% 68%,#27425e 0,transparent 59%),linear-gradient(115deg,#111c30,#14253d 55%,#1b3048);--muted:#a7b7c9;--accent:#f0cfa1;--halo-core:rgba(255,183,78,.29);--halo-back:rgba(72,111,151,.25)}
+
+.ambient-layer{background:transparent;opacity:0;will-change:opacity}
+.ambient-halo{position:absolute;inset:9% 2% 8% 9%;z-index:0;pointer-events:none;background:radial-gradient(ellipse 34% 18% at 57% 69%,var(--halo-core),transparent 76%),radial-gradient(ellipse 47% 35% at 57% 48%,var(--halo-back),transparent 78%),radial-gradient(ellipse 40% 11% at 57% 79%,var(--halo-ground),transparent 78%);filter:blur(17px);opacity:.86;transition:background 1.55s ease-in-out,opacity 1.55s ease-in-out,filter 1.55s ease-in-out;will-change:opacity,filter}
+.page.sunset .ambient-halo{opacity:.96;filter:blur(19px)}
+.page.night .ambient-halo{opacity:.9;filter:blur(21px)}
+.page.season-winter .ambient-halo{--halo-ground:rgba(108,137,157,.13)}
+
+.house-breath{z-index:1;will-change:transform,filter;animation-duration:10.5s}
+.copy .eyebrow,.copy h1,.copy .body,.copy .personal{will-change:opacity,transform}
+.top,.controls,.foot,.tabs,.tab,.group-label,.brand-note,.dedication{transition-property:color,background-color,border-color,box-shadow;transition-duration:1.35s;transition-timing-function:ease-in-out}
+.time-grade,.house-breath,.porch-light,.window-warmth,.weather-layer,.weather-tint{transition-duration:1.35s!important;transition-timing-function:ease-in-out!important}
+.weather-layer.weather-outgoing{z-index:3;pointer-events:none}
+
+/* Daylight still has a nearly imperceptible living-window pulse, avoiding a
+   display:none jump when moving into sunset. */
+.page.day .window-glow{display:block;animation-name:window-breath-day}
+@keyframes window-breath-day{0%,100%{opacity:.004}50%{opacity:.014}}
+@keyframes house-breath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.0015)}}
+
+@media(max-width:767px){
+  .ambient-halo{inset:4% -4% 4% -4%;filter:blur(13px)}
+  .page.sunset .ambient-halo{filter:blur(15px)}
+  .page.night .ambient-halo{filter:blur(16px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .page,.ambient-halo,.top,.controls,.foot,.tabs,.tab,.group-label,.brand-note,.dedication{transition:none!important}
+  .ambient-halo{filter:blur(15px)}
+}
