@@ -10,6 +10,43 @@
 
 直接打开 `index.html` 可以预览。为了模拟线上部署，建议在本目录启动任意静态文件服务器，然后访问根路径。
 
+## 实时 3D 技术验证
+
+静态图片版本仍是默认体验，不会额外下载 3D 引擎或模型。启动静态文件服务器后，在地址后加入：
+
+`?realtime3d=1&preview3d=1&season=summer&time=day`
+
+即可进入实时 3D 预览。Spring / Summer / Autumn / Winter 与 Day / Sunset / Night 均由同一个 GLB 实例组合生成，不会替换或重新加载房屋模型。时间完整过渡为 2100ms，季节完整过渡为 1650ms。
+
+预览使用本地随项目发布的 Three.js 和 `assets/models/summer_day_cottage.glb`，不依赖 CDN；模型或 WebGL 加载失败时会自动恢复原来的静态图片。
+
+实时参数集中在 `realtime3d.js` 顶部：
+
+- `TIME_TRANSITION_MS`：时间过渡时长
+- `TIME_OF_DAY.day / sunset / night.sunlightIntensity`：太阳强度
+- `sunlightColor` 与 `sunPosition`：太阳颜色和方向
+- `environmentIntensity / environmentColor / groundColor`：环境光
+- `windowEmission`：窗户发光
+- `porchEmission`：门廊灯发光
+- `background / halo / haloOpacity`：网页背景与模型环境光晕
+- `SEASON_TRANSITION_MS`：季节过渡时长
+- `SEASON_STATE.spring / summer / autumn / winter`：树冠、地面、环境色和季节点缀参数
+
+季节附加元素由运行时低成本几何生成：春花和秋叶分别使用一个 `InstancedMesh`，冬季使用一个雪地层和一个从现有屋顶向上表面提取的雪层。Weather 仍是独立 HTML 粒子层，可与任意季节和时段组合。
+
+实时模式会先显示“小屋正在醒来。”，模型准备完成后再淡入序章；若模型或 WebGL 不可用，会静默回到原静态版本。冬季树冠由同一棵树的叶团 Morph 逐步减少，`Tree_Trunk` 与整棵树的缩放始终保持不变。
+
+## 实时对象互动
+
+`realtime3d.js` 中的 `createObjectPicker()` 使用 Three.js `Raycaster`，同时为小物件提供扩大的隐藏拾取区域：
+
+- `Guitar`：hover 暖色高亮，点击播放当前季节对应音频，1400ms 冷却。
+- `Porch_Light`：点击后平滑改变材质发光和局部点光源。
+- `Windows`：点击增强暖光，显示“灯一直为你亮着。”，随后缓慢恢复。
+- `Piano` / `Bookshelf`：已保留 hover 高亮与 `cottage3d:objectclick` 点击事件。
+
+桌面视差约 ±2.7°，手机端约 ±0.9°；点击物件会有一次轻微推近并自动回到主构图。一个访问周期只加载一次 GLB，季节和时段切换不会替换模型。
+
 ## GitHub
 
 将本目录中的全部内容作为仓库根目录提交：

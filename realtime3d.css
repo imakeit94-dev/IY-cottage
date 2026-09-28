@@ -1,0 +1,21 @@
+/* Opt-in realtime proof of concept. Static imagery remains the fallback. */
+.realtime-3d{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;transition:opacity .72s ease-in-out}
+.realtime-3d:before{content:'';position:absolute;z-index:0;inset:15% 7% 8% 10%;background:radial-gradient(ellipse 43% 31% at 56% 58%,var(--rt-halo,#ffe2a8),transparent 76%);filter:blur(25px);opacity:var(--rt-halo-opacity,.13);pointer-events:none}
+.realtime-3d canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
+.realtime-3d-status{position:absolute;z-index:2;left:50%;bottom:14%;transform:translateX(-50%) translateY(4px);padding:7px 11px;border:1px solid var(--line);border-radius:20px;background:rgba(26,31,35,.28);backdrop-filter:blur(7px);color:var(--muted);font-size:9px;letter-spacing:.08em;white-space:nowrap;opacity:0;transition:opacity .45s ease,transform .45s ease}
+.page.realtime-3d-loading .realtime-3d{opacity:1}
+.page.realtime-3d-loading .realtime-3d-status{opacity:.78;transform:translateX(-50%) translateY(0)}
+.page.realtime-3d-ready .realtime-3d{opacity:1}
+.page.realtime-3d-ready .realtime-3d{pointer-events:auto}
+.page.realtime-3d-ready .realtime-3d.has-pick canvas{cursor:pointer}
+.page.realtime-3d-ready{background:radial-gradient(ellipse at 84% 72%,var(--rt-bg-c,#b7c5ae) 0,transparent 58%),linear-gradient(120deg,var(--rt-bg-a,#b8c2ad),var(--rt-bg-b,#cbc9b7) 54%,var(--rt-bg-c,#b7c5ae))}
+.page.realtime-3d-ready .realtime-3d-status{opacity:0}
+.house-breath{transition:filter 1.35s ease-in-out,opacity .72s ease-in-out}
+.page.realtime-3d-ready .house-breath{opacity:0}
+.page.realtime-3d-ready .ambient-halo{opacity:0}
+.page.realtime-3d-ready .scene-interactions,.page.realtime-3d-ready .scene-interactions *,.page.realtime-3d-ready .porch-light,.page.realtime-3d-ready .window-warmth,.page.realtime-3d-ready .shelf-book,.page.realtime-3d-ready .table-book,.page.realtime-3d-ready .secret-card,.page.realtime-3d-ready .bookmark-note{opacity:0!important;pointer-events:none!important}
+.page.realtime-3d-fallback .realtime-3d{display:none}
+.realtime-loading-overlay{position:fixed;inset:0;z-index:40;display:grid;place-content:center;justify-items:center;gap:12px;background:#151a24;color:#eadfcf;opacity:0;transition:opacity .55s ease;pointer-events:auto}.realtime-loading-overlay.show{opacity:1}.realtime-loading-overlay.done{pointer-events:none}.realtime-loading-overlay p{margin:0;font-family:'Songti SC','Noto Serif CJK SC',serif;font-size:14px;letter-spacing:.16em}.realtime-loading-mark{font-size:25px;color:#dfc28f;animation:loading-breathe 2.4s ease-in-out infinite}.realtime-loading-active .prologue-first,.realtime-loading-active .prologue-home,.realtime-loading-active .prologue-birthday,.realtime-loading-active .home-button{animation-play-state:paused!important}
+@keyframes loading-breathe{0%,100%{opacity:.42;transform:translateY(1px)}50%{opacity:.9;transform:translateY(-1px)}}
+@media(max-width:767px){.realtime-3d-status{bottom:8%;font-size:8px}.realtime-3d{inset:-3% -2% -1%}}
+@media(prefers-reduced-motion:reduce){.realtime-3d,.realtime-3d-status,.house-breath{transition-duration:.12s!important}}

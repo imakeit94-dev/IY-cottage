@@ -49,7 +49,7 @@ musicButton.addEventListener('click',async()=>{
 });
 
 function pulse(button){button.classList.remove('pulse');void button.offsetWidth;button.classList.add('pulse');setTimeout(()=>button.classList.remove('pulse'),750)}
-let guitarRequest=0,knownSeason=season;
+let guitarRequest=0,knownSeason=season,lastGuitarAt=0;
 function fadeGuitar(id,duration=180){return new Promise(resolve=>{
   if(guitarSound.paused||!guitarSound.currentTime){resolve(true);return}
   const started=performance.now(),initial=guitarSound.volume;
@@ -61,6 +61,7 @@ function fadeGuitar(id,duration=180){return new Promise(resolve=>{
   requestAnimationFrame(step);
 })}
 async function playSeasonGuitar(){
+  const now=performance.now();if(now-lastGuitarAt<1400)return;lastGuitarAt=now;
   const id=++guitarRequest,target=guitarSounds[season]||guitarSounds.summer;pulse(guitar);
   if(!await fadeGuitar(id)||id!==guitarRequest)return;
   guitarSound.pause();guitarSound.currentTime=0;guitarSound.volume=guitarVolume;
@@ -70,11 +71,15 @@ async function playSeasonGuitar(){
 async function stopGuitar(){const id=++guitarRequest;if(await fadeGuitar(id)&&id===guitarRequest)guitarSound.volume=guitarVolume}
 guitar.addEventListener('click',playSeasonGuitar);
 
-let lampOn=false;lamp.addEventListener('click',()=>{lampOn=!lampOn;root.classList.toggle('lamp-on',lampOn);lamp.setAttribute('aria-pressed',String(lampOn));lamp.setAttribute('aria-label',lampOn?'调暗门廊灯':'打开门廊灯');pulse(lamp)});
-let whisperTimer=0;windowButton.addEventListener('click',()=>{
+let lampOn=false;function toggleLamp(){lampOn=!lampOn;root.classList.toggle('lamp-on',lampOn);lamp.setAttribute('aria-pressed',String(lampOn));lamp.setAttribute('aria-label',lampOn?'调暗门廊灯':'打开门廊灯');pulse(lamp);root.dispatchEvent(new CustomEvent('cottage:lamp',{detail:{on:lampOn}}));return lampOn}
+lamp.addEventListener('click',toggleLamp);
+let whisperTimer=0;function awakenWindow(){
   root.classList.add('window-awake');whisper.classList.add('show');pulse(windowButton);clearTimeout(whisperTimer);
+  root.dispatchEvent(new CustomEvent('cottage:windowawake'));
   whisperTimer=setTimeout(()=>{root.classList.remove('window-awake');whisper.classList.remove('show')},3200);
-});
+}
+windowButton.addEventListener('click',awakenWindow);
+window.cottageInteractions={playSeasonGuitar,toggleLamp,awakenWindow,stopGuitar,isMusicOn:()=>musicOn};
 root.addEventListener('cottage:statechange',event=>{
   applyScenePoints();requestAnimationFrame(placeSceneControls);
   clearTimeout(whisperTimer);root.classList.remove('window-awake');whisper.classList.remove('show');

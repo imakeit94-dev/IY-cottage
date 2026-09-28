@@ -19,7 +19,7 @@ const breath=document.createElement('div');breath.className='house-breath';house
 const halo=document.createElement('div');halo.className='ambient-halo';halo.setAttribute('aria-hidden','true');visual.prepend(halo);
 const tree=document.createElement('div');tree.className='tree-breeze';tree.setAttribute('aria-hidden','true');const treeImage=new Image();treeImage.alt='';tree.append(treeImage);breath.append(tree);
 const glow=document.createElement('div');glow.className='window-glow';glow.setAttribute('aria-hidden','true');breath.append(glow);
-const weatherLayer=document.createElement('div');weatherLayer.className='weather-layer';weatherLayer.setAttribute('aria-hidden','true');breath.append(weatherLayer);
+const weatherLayer=document.createElement('div');weatherLayer.className='weather-layer';weatherLayer.setAttribute('aria-hidden','true');visual.append(weatherLayer);
 const tint=document.createElement('div');tint.className='weather-tint';tint.setAttribute('aria-hidden','true');root.prepend(tint);
 const bg=document.createElement('div');bg.className='ambient-layer';bg.setAttribute('aria-hidden','true');root.prepend(bg);
 const status=document.createElement('div');status.className='motion-status';status.setAttribute('role','status');root.append(status);
@@ -104,13 +104,14 @@ function animateTextIn(){
 async function select(nextSeason,nextTime){
   requestedSeason=nextSeason;requestedTime=nextTime;const id=++revision;
   const seasonChanged=nextSeason!==season;
+  const realtimeStateChange=root.dataset.webgl==='ready';
   const image=new Image();image.src=`assets/${nextSeason}_${nextTime}.webp`;
   try{await image.decode()}catch{if(id===revision)status.textContent='图片暂时无法载入，请重新选择。';return}
   if(id!==revision)return;status.textContent='';cancel();
   if(!reduced.matches){
     await Promise.all([
       animateTextOut(),
-      animate(visual,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.988)'}],{duration:TRANSITION.houseOut,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'})
+      realtimeStateChange?Promise.resolve():animate(visual,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.988)'}],{duration:TRANSITION.houseOut,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'})
     ]);
     if(id!==revision)return;
   }
@@ -121,7 +122,7 @@ async function select(nextSeason,nextTime){
   if(reduced.matches){cancel();bg.style.opacity='0';return}
   await Promise.all([
     animateTextIn(),
-    animate(visual,[{opacity:0,transform:'scale(1.012)'},{opacity:1,transform:'scale(1)'}],{duration:TRANSITION.houseIn,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}),
+    realtimeStateChange?Promise.resolve():animate(visual,[{opacity:0,transform:'scale(1.012)'},{opacity:1,transform:'scale(1)'}],{duration:TRANSITION.houseIn,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}),
     animate(bg,[{opacity:1},{opacity:0}],{duration:TRANSITION.background,easing:'cubic-bezier(.45,0,.3,1)',fill:'forwards'})
   ]);
   if(id===revision){cancel();bg.style.opacity='0'}
