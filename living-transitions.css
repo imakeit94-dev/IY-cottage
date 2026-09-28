@@ -23,6 +23,12 @@
 .page.season-autumn.night{background:radial-gradient(ellipse at 81% 68%,#483b52 0,transparent 59%),linear-gradient(115deg,#201b29,#2b2232 54%,#3d2b38);--muted:#b8a9b5;--accent:#eac18c;--halo-core:rgba(255,176,75,.28);--halo-back:rgba(104,70,89,.22)}
 .page.season-winter.night{background:radial-gradient(ellipse at 81% 68%,#27425e 0,transparent 59%),linear-gradient(115deg,#111c30,#14253d 55%,#1b3048);--muted:#a7b7c9;--accent:#f0cfa1;--halo-core:rgba(255,183,78,.29);--halo-back:rgba(72,111,151,.25)}
 
+/* Screen-space window positions follow each season's approved camera. */
+.page.season-spring{--window-1-x:45%;--window-1-y:45.4%;--window-2-x:51.4%;--window-2-y:43.2%;--window-3-x:57.8%;--window-3-y:41%;--window-round-x:52.4%;--window-round-y:37.8%}
+.page.season-summer{--window-1-x:42.1%;--window-1-y:42.7%;--window-2-x:49.6%;--window-2-y:43.4%;--window-3-x:57%;--window-3-y:44.1%;--window-round-x:49.8%;--window-round-y:38.3%}
+.page.season-autumn{--window-1-x:43%;--window-1-y:44.1%;--window-2-x:50.5%;--window-2-y:43.4%;--window-3-x:57.9%;--window-3-y:42.7%;--window-round-x:50.2%;--window-round-y:38.1%}
+.page.season-winter{--window-1-x:42.5%;--window-1-y:43.4%;--window-2-x:50%;--window-2-y:43.4%;--window-3-x:57.5%;--window-3-y:43.4%;--window-round-x:50%;--window-round-y:38.2%}
+
 .ambient-layer{background:transparent;opacity:0;will-change:opacity}
 .ambient-halo{position:absolute;inset:9% 2% 8% 9%;z-index:0;pointer-events:none;background:radial-gradient(ellipse 34% 18% at 57% 69%,var(--halo-core),transparent 76%),radial-gradient(ellipse 47% 35% at 57% 48%,var(--halo-back),transparent 78%),radial-gradient(ellipse 40% 11% at 57% 79%,var(--halo-ground),transparent 78%);filter:blur(17px);opacity:.86;transition:background 1.55s ease-in-out,opacity 1.55s ease-in-out,filter 1.55s ease-in-out;will-change:opacity,filter}
 .page.sunset .ambient-halo{opacity:.96;filter:blur(19px)}

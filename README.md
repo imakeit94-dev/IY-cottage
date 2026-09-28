@@ -4,6 +4,8 @@
 
 状态切换的视觉节奏集中在 `motion.js` 顶部的 `TRANSITION` 参数中；四季 × 三时段的背景与小屋环境光晕集中在 `living-transitions.css`，便于继续微调而不影响页面结构。
 
+季节机位固定为：Spring → `Hero_View`、Summer → `Right_3Q`、Autumn → `Left_3Q`、Winter → `Center_Front`。Day / Sunset / Night 只更换同机位下的光照素材，不改变视角；序章继续使用 `Hero_View`。
+
 ## 本地预览
 
 直接打开 `index.html` 可以预览。为了模拟线上部署，建议在本目录启动任意静态文件服务器，然后访问根路径。

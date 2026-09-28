@@ -14,15 +14,30 @@ const guitarSounds={
 };
 const guitarVolume=.2;
 
+// Interaction overlays follow the camera assigned to each season. Values are
+// normalized against the 1500 × 1280 render and remain unchanged across time.
+const scenePoints={
+  spring:{guitar:[.455,.62],lamp:[.526,.545],window:[.555,.405],shelf:[.585,.535],table:[.7,.55],shelfCard:[.655,.46],note:[.7,.465],whisper:[.59,.47]},
+  summer:{guitar:[.393,.588],lamp:[.499,.548],window:[.547,.436],shelf:[.595,.562],table:[.63,.626],shelfCard:[.665,.487],note:[.63,.541],whisper:[.582,.501]},
+  autumn:{guitar:[.417,.606],lamp:[.513,.548],window:[.556,.422],shelf:[.595,.549],table:[.676,.593],shelfCard:[.665,.474],note:[.676,.508],whisper:[.591,.487]},
+  winter:{guitar:[.403,.598],lamp:[.506,.548],window:[.553,.429],shelf:[.596,.556],table:[.655,.611],shelfCard:[.666,.481],note:[.655,.526],whisper:[.588,.494]}
+};
+const pointTargets={guitar:'.guitar-hotspot',lamp:'.porch-light,.lamp-hotspot',window:'.window-warmth,.window-hotspot',shelf:'.shelf-book,.shelf-hotspot',table:'.table-book,.table-book-hotspot',shelfCard:'.shelf-secret',note:'.bookmark-note'};
+function applyScenePoints(){
+  const points=scenePoints[season]||scenePoints.spring;
+  Object.entries(pointTargets).forEach(([key,selector])=>document.querySelectorAll(selector).forEach(el=>{el.dataset.sceneX=points[key][0];el.dataset.sceneY=points[key][1]}));
+  return points;
+}
+
 function placeSceneControls(){
   const width=breath.clientWidth,height=breath.clientHeight;if(!width||!height||!house.naturalWidth)return;
   const imageRatio=house.naturalWidth/house.naturalHeight,boxRatio=width/height;
   let shownWidth,shownHeight,offsetX,offsetY;
   if(boxRatio>imageRatio){shownHeight=height;shownWidth=height*imageRatio;offsetX=(width-shownWidth)/2;offsetY=0}else{shownWidth=width;shownHeight=width/imageRatio;offsetX=0;offsetY=(height-shownHeight)/2}
   positioned.forEach(el=>{el.style.left=`${offsetX+Number(el.dataset.sceneX)*shownWidth}px`;el.style.top=`${offsetY+Number(el.dataset.sceneY)*shownHeight}px`});
-  whisper.style.left=`${offsetX+.59*shownWidth}px`;whisper.style.top=`${offsetY+.47*shownHeight}px`;
+  const points=scenePoints[season]||scenePoints.spring;whisper.style.left=`${offsetX+points.whisper[0]*shownWidth}px`;whisper.style.top=`${offsetY+points.whisper[1]*shownHeight}px`;
 }
-house.addEventListener('load',placeSceneControls);addEventListener('resize',placeSceneControls,{passive:true});requestAnimationFrame(placeSceneControls);
+applyScenePoints();house.addEventListener('load',placeSceneControls);addEventListener('resize',placeSceneControls,{passive:true});requestAnimationFrame(placeSceneControls);
 
 backgroundMusic.volume=.18;guitarSound.volume=guitarVolume;
 let musicOn=false;let remembered=false;try{remembered=sessionStorage.getItem('ourCottageMusic')==='on'}catch{}
@@ -61,6 +76,7 @@ let whisperTimer=0;windowButton.addEventListener('click',()=>{
   whisperTimer=setTimeout(()=>{root.classList.remove('window-awake');whisper.classList.remove('show')},3200);
 });
 root.addEventListener('cottage:statechange',event=>{
+  applyScenePoints();requestAnimationFrame(placeSceneControls);
   clearTimeout(whisperTimer);root.classList.remove('window-awake');whisper.classList.remove('show');
   if(event.detail.season!==knownSeason){knownSeason=event.detail.season;stopGuitar()}
 });
