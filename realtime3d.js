@@ -2,7 +2,8 @@ let THREE;
 let GLTFLoader;
 
 const params=new URLSearchParams(location.search);
-const enabled=params.get('realtime3d')==='1';
+// Realtime 3D is the default experience. Use ?realtime3d=0 only to inspect the static fallback.
+const enabled=params.get('realtime3d')!=='0';
 const preview=params.get('preview3d')==='1';
 const page=document.getElementById('page');
 const visual=document.querySelector('.visual');

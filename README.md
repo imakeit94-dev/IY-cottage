@@ -12,11 +12,11 @@
 
 ## 实时 3D 技术验证
 
-静态图片版本仍是默认体验，不会额外下载 3D 引擎或模型。启动静态文件服务器后，在地址后加入：
+实时 3D 是默认体验。正常访问根路径即可加载同一个 GLB，并保留静态图片作为 WebGL 或模型加载失败时的自动 fallback。
 
-`?realtime3d=1&preview3d=1&season=summer&time=day`
+`?preview3d=1&season=summer&time=day`
 
-即可进入实时 3D 预览。Spring / Summer / Autumn / Winter 与 Day / Sunset / Night 均由同一个 GLB 实例组合生成，不会替换或重新加载房屋模型。时间完整过渡为 2100ms，季节完整过渡为 1650ms。
+即可跳过序章直接进入实时 3D 调试预览。Spring / Summer / Autumn / Winter 与 Day / Sunset / Night 均由同一个 GLB 实例组合生成，不会替换或重新加载房屋模型。时间完整过渡为 2100ms，季节完整过渡为 1650ms。需要单独检查旧静态版本时可使用 `?realtime3d=0`。
 
 预览使用本地随项目发布的 Three.js 和 `assets/models/summer_day_cottage.glb`，不依赖 CDN；模型或 WebGL 加载失败时会自动恢复原来的静态图片。
 
