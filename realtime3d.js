@@ -12,6 +12,20 @@ const canvas=document.getElementById('cottage-webgl');
 const status=document.getElementById('realtime-3d-status');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 
+// Local, offline moon phase calculation. 2451550.25972 is the Julian date of
+// the 2000-01-06 18:14 UTC new moon; the synodic month is expressed in days.
+const SYNODIC_MONTH=29.530588853;
+const REFERENCE_NEW_MOON_JD=2451550.25972;
+const MOON_PHASE_NAMES=['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+function calculateMoonPhase(input=new Date()){
+  const date=input instanceof Date?input:new Date(input);
+  const julianDate=date.getTime()/86400000+2440587.5;
+  const phase=((julianDate-REFERENCE_NEW_MOON_JD)/SYNODIC_MONTH%1+1)%1;
+  const illumination=(1-Math.cos(Math.PI*2*phase))/2;
+  const index=Math.floor(phase*8+.5)%8;
+  return {date,phase,illumination,name:MOON_PHASE_NAMES[index],percent:Math.round(illumination*100)};
+}
+
 // Realtime Summer lighting controls. These are the first values to tune.
 const TIME_TRANSITION_MS=2100;
 const SEASON_TRANSITION_MS=1650;
@@ -21,21 +35,24 @@ const TIME_OF_DAY={
     environmentIntensity:2.15,environmentColor:0xf5edda,groundColor:0x53645a,
     exposure:1.05,windowEmission:.012,windowColor:0xffd6a0,porchEmission:0,porchColor:0xffbc69,
     windowLight:0,porchLight:0,cameraYaw:-.014,
-    background:[0xb8c2ad,0xcbc9b7,0xb7c5ae],halo:0xffe2a8,haloOpacity:.13,fogColor:0xd9e2d4,fogDensity:.0025,homeActivity:.42,nightFactor:0
+    background:[0xb8c2ad,0xcbc9b7,0xb7c5ae],halo:0xffe2a8,haloOpacity:.13,fogColor:0xd9e2d4,fogDensity:.0025,homeActivity:.42,nightFactor:0,
+    sunDiscOpacity:.78,sunDiscScale:1,sunDiscColor:0xffe2aa,sunDiscPosition:[7.7,7.5,-72],moonOpacity:0,moonPosition:[8.2,7.1,-70],moonLightIntensity:0
   },
   sunset:{
-    sunlightIntensity:2.45,sunlightColor:0xff9a68,sunPosition:[-15,5.2,-10],
-    environmentIntensity:1.25,environmentColor:0xdba5a0,groundColor:0x514151,
+    sunlightIntensity:2.55,sunlightColor:0xff7548,sunPosition:[-15,5.2,-10],
+    environmentIntensity:1.3,environmentColor:0xd99179,groundColor:0x514151,
     exposure:1.0,windowEmission:.46,windowColor:0xffad59,porchEmission:.36,porchColor:0xffa851,
     windowLight:12,porchLight:9,cameraYaw:.025,
-    background:[0x503744,0x754759,0x9d6670],halo:0xffa85c,haloOpacity:.26,fogColor:0x74505c,fogDensity:.0065,homeActivity:.76,nightFactor:.36
+    background:[0x503744,0x754759,0x9d6670],halo:0xffa85c,haloOpacity:.26,fogColor:0x74505c,fogDensity:.0065,homeActivity:.76,nightFactor:.36,
+    sunDiscOpacity:.92,sunDiscScale:1.08,sunDiscColor:0xf15f3b,sunDiscPosition:[10.8,3.6,-72],moonOpacity:.025,moonPosition:[8.15,7.05,-70],moonLightIntensity:.025
   },
   night:{
     sunlightIntensity:.42,sunlightColor:0x809dca,sunPosition:[-8,8,-7],
     environmentIntensity:.58,environmentColor:0x31486d,groundColor:0x14243a,
     exposure:.91,windowEmission:1.3,windowColor:0xffc36b,porchEmission:1.15,porchColor:0xffb45d,
     windowLight:30,porchLight:20,cameraYaw:0,
-    background:[0x121e31,0x102a42,0x1b3550],halo:0xffbd66,haloOpacity:.24,fogColor:0x172b43,fogDensity:.012,homeActivity:1,nightFactor:1
+    background:[0x121e31,0x102a42,0x1b3550],halo:0xffbd66,haloOpacity:.24,fogColor:0x172b43,fogDensity:.012,homeActivity:1,nightFactor:1,
+    sunDiscOpacity:0,sunDiscScale:.9,sunDiscColor:0xff8253,sunDiscPosition:[9.4,-7.2,-72],moonOpacity:.9,moonPosition:[8.15,7.05,-70],moonLightIntensity:.16
   }
 };
 
@@ -97,6 +114,7 @@ async function init(){
   const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0xd9e2d4,.0025);
   const hemi=new THREE.HemisphereLight();scene.add(hemi);
   const sun=new THREE.DirectionalLight();sun.target.position.set(0,2,0);scene.add(sun,sun.target);
+  const moonLight=new THREE.DirectionalLight(0x8da8d1,0);moonLight.position.set(8,12,7);moonLight.target.position.set(0,2,0);scene.add(moonLight,moonLight.target);
   if(renderer.shadowMap.enabled){sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-18;sun.shadow.camera.right=18;sun.shadow.camera.top=18;sun.shadow.camera.bottom=-18;sun.shadow.camera.near=.1;sun.shadow.camera.far=60;sun.shadow.bias=-.0003}
 
   const loader=new GLTFLoader();
@@ -132,6 +150,11 @@ async function init(){
   const cameraBasePosition=camera.position.clone();const cameraForward=new THREE.Vector3();camera.getWorldDirection(cameraForward);
   const cameraRight=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion).normalize();const cameraUp=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion).normalize();
   const cameraBaseTarget=cameraBasePosition.clone().addScaledVector(cameraForward,32);let cameraLookTarget=cameraBaseTarget.clone();
+  const requestedMoonDate=params.get('moonDate');
+  let moonPhase=calculateMoonPhase(requestedMoonDate?`${requestedMoonDate}T12:00:00`:new Date());
+  if(!Number.isFinite(moonPhase.phase))moonPhase=calculateMoonPhase(new Date());
+  const celestial=createCelestialSystem(camera,moonPhase);
+  const moonNote=createMoonNote();
   const CAMERA_SEASON={spring:{lateral:-.28,height:.03,depth:.02,target:-.04},summer:{lateral:.38,height:0,depth:.04,target:.05},autumn:{lateral:-.42,height:.02,depth:.03,target:-.06},winter:{view:'Winter_Right_View',worldAzimuth:24,height:.08,target:-.12}};
   function cameraPose(name){
     const pose=CAMERA_SEASON[name]||CAMERA_SEASON.spring;
@@ -149,7 +172,8 @@ async function init(){
   const picker=createObjectPicker(model,controls);
   const highlightLevel={Guitar:0,Piano:0,Bookshelf:0};
   let hoveredName=null,lampTarget=page.classList.contains('lamp-on')?1:0,lampLevel=lampTarget,windowTarget=0,windowLevelInteractive=0,cameraPushTarget=0,cameraPushLevel=0;
-  let windowRestoreTimer=0,cameraPushTimer=0;
+  let moonHaloBoostTarget=0,moonHaloBoost=0,moonSecretTriggered=false,moonBirthdayTriggered=false,moonClicks=[];
+  let windowRestoreTimer=0,cameraPushTimer=0,moonHaloTimer=0,birthdayTimer=0;
   let lighting=makeLighting(TIME_OF_DAY.day);
   let seasonLighting=makeLighting(SEASON_STATE.summer);
   let lightingTransition=null;
@@ -287,6 +311,71 @@ async function init(){
 
     return {group,cupGroup,smoke,smokeMaterial,smokePuffs,porchPool,porchPoolMaterial,spring,summer,autumn,winter,butterflyWingMaterial,butterflyBodyMaterial,fireflyMaterial,squirrelMaterial,catMaterial,leftWing,rightWing,squirrelTail,catTail,fireflyBase};
   }
+  function createCelestialSystem(owner,phaseInfo){
+    const vertexShader=`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+    const sunMaterial=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,toneMapped:false,uniforms:{uColor:{value:new THREE.Color(0xffe2aa)},uOpacity:{value:0}},vertexShader,fragmentShader:`
+      varying vec2 vUv;uniform vec3 uColor;uniform float uOpacity;
+      void main(){
+        vec2 p=(vUv-.5)*2.;float radius=length(p);
+        float disc=1.-smoothstep(.47,.53,radius);
+        float halo=(1.-smoothstep(.52,.92,radius))*.28;
+        float alpha=uOpacity*max(disc,halo*(1.-disc));
+        vec3 color=mix(uColor*.9,uColor*1.08,1.-smoothstep(0.,.48,radius));
+        gl_FragColor=vec4(color,alpha);
+      }`});
+    const moonMaterial=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,toneMapped:false,uniforms:{uColor:{value:new THREE.Color(0xdad9cf)},uOpacity:{value:0},uLightDirection:{value:new THREE.Vector3(0,0,-1)},uTerminatorCurve:{value:0},uIllumination:{value:phaseInfo.illumination},uHaloBoost:{value:0}},vertexShader,fragmentShader:`
+      varying vec2 vUv;uniform vec3 uColor;uniform float uOpacity;uniform vec3 uLightDirection;uniform float uTerminatorCurve;uniform float uIllumination;uniform float uHaloBoost;
+      void main(){
+        vec2 p=(vUv-.5)*2.;float radius=length(p);float moonRadius=.52;
+        float disc=1.-smoothstep(moonRadius-.014,moonRadius+.014,radius);
+        float z=sqrt(max(0.,1.-dot(p/moonRadius,p/moonRadius)));
+        vec3 normal=normalize(vec3(p/moonRadius,z));
+        float lightDot=dot(normal,normalize(uLightDirection))+uTerminatorCurve*(1.-z);
+        float lit=smoothstep(-.13,.16,lightDot);float sphereShade=.62+.38*pow(z,.62);
+        float maria=(1.-smoothstep(.025,.19,distance(p,vec2(-.14,.13))))*.045;
+        maria+=(1.-smoothstep(.02,.12,distance(p,vec2(.16,-.09))))*.03;
+        maria+=(1.-smoothstep(.018,.085,distance(p,vec2(.04,.2))))*.022;
+        vec3 dark=vec3(.15,.18,.235)*(.76+.24*z);
+        vec3 bright=uColor*max(.72,sphereShade-maria);
+        vec3 surface=mix(dark,bright,lit);
+        surface*=1.+uHaloBoost;
+        float halo=(1.-smoothstep(.54,.96,radius))*(.025+.13*sqrt(max(uIllumination,0.))+uHaloBoost*.62);
+        float alpha=uOpacity*max(disc,halo*(1.-disc));
+        vec3 color=mix(surface,uColor,clamp(halo*(1.-disc)*2.6,0.,1.));
+        gl_FragColor=vec4(color,alpha);
+      }`});
+    const geometry=new THREE.PlaneGeometry(3.6,3.6);
+    const sunDisc=new THREE.Mesh(geometry,sunMaterial);sunDisc.name='Sun';sunDisc.frustumCulled=false;
+    const moonDisc=new THREE.Mesh(geometry.clone(),moonMaterial);moonDisc.name='Moon';moonDisc.frustumCulled=false;
+    owner.add(sunDisc,moonDisc);
+    function setPhase(info){
+      const angle=info.phase*Math.PI*2;
+      moonMaterial.uniforms.uLightDirection.value.set(Math.sin(angle),0,-Math.cos(angle)).normalize();
+      moonMaterial.uniforms.uTerminatorCurve.value=(Math.sin(angle)>=0?1:-1)*.34*Math.pow(Math.abs(Math.sin(angle)),.8);
+      moonMaterial.uniforms.uIllumination.value=info.illumination;
+    }
+    function pickMoon(event,opacity){
+      if(opacity<.18)return false;
+      const rect=canvas.getBoundingClientRect();const point=moonDisc.getWorldPosition(new THREE.Vector3()).project(camera);
+      const x=rect.left+(point.x+1)*rect.width/2,y=rect.top+(1-point.y)*rect.height/2;
+      const radius=mobile?54:46;return (event.clientX-x)**2+(event.clientY-y)**2<radius*radius;
+    }
+    setPhase(phaseInfo);
+    return {sun:sunDisc,moon:moonDisc,sunMaterial,moonMaterial,setPhase,pickMoon};
+  }
+  function createMoonNote(){
+    const note=document.createElement('div');note.className='moon-note';note.setAttribute('role','status');note.setAttribute('aria-live','polite');visual.append(note);
+    let showTimer=0,hideTimer=0,busyUntil=0;
+    function show(message,detail,duration=3400,delay=0,kind='phase'){
+      const protectedNote=note.classList.contains('show')&&(note.dataset.kind==='birthday'||note.dataset.kind==='secret');
+      const wait=(kind==='phase'||!protectedNote)?delay:Math.max(delay,busyUntil-performance.now()+260,0);busyUntil=performance.now()+wait+duration;
+      clearTimeout(showTimer);showTimer=setTimeout(()=>{
+        clearTimeout(hideTimer);note.classList.remove('show');note.dataset.kind=kind;
+        setTimeout(()=>{note.replaceChildren();const text=document.createElement('span');text.textContent=message;note.append(text);if(detail){const small=document.createElement('small');small.textContent=detail;note.append(small)}note.classList.add('show');hideTimer=setTimeout(()=>note.classList.remove('show'),duration)},80);
+      },wait);
+    }
+    return {element:note,show,get busyUntil(){return busyUntil}};
+  }
   function createObjectPicker(parent,objects){
     const raycaster=new THREE.Raycaster();raycaster.layers.set(1);const pointer=new THREE.Vector2();const targets=[];
     const expansion={Guitar:[2.3,1.6,2.1],Windows:[1.08,1.2,1.18],Porch_Light:[4.2,3.2,4.2],Piano:[1.35,1.35,1.35],Bookshelf:[1.45,1.4,1.45]};
@@ -321,9 +410,11 @@ async function init(){
   function mixColor(a,b,t){return new THREE.Color(a).lerp(new THREE.Color(b),t).getHex()}
   function mixLighting(a,b,t){
     const value={};
-    for(const key of ['sunlightIntensity','environmentIntensity','exposure','windowEmission','porchEmission','windowLight','porchLight','cameraYaw','haloOpacity','fogDensity','homeActivity','nightFactor'])value[key]=mixNumber(a[key],b[key],t);
-    for(const key of ['sunlightColor','environmentColor','groundColor','windowColor','porchColor','halo','fogColor'])value[key]=mixColor(a[key],b[key],t);
+    for(const key of ['sunlightIntensity','environmentIntensity','exposure','windowEmission','porchEmission','windowLight','porchLight','cameraYaw','haloOpacity','fogDensity','homeActivity','nightFactor','sunDiscOpacity','sunDiscScale','moonOpacity','moonLightIntensity'])value[key]=mixNumber(a[key],b[key],t);
+    for(const key of ['sunlightColor','environmentColor','groundColor','windowColor','porchColor','halo','fogColor','sunDiscColor'])value[key]=mixColor(a[key],b[key],t);
     value.sunPosition=a.sunPosition.map((item,index)=>mixNumber(item,b.sunPosition[index],t));
+    value.sunDiscPosition=a.sunDiscPosition.map((item,index)=>mixNumber(item,b.sunDiscPosition[index],t));
+    value.moonPosition=a.moonPosition.map((item,index)=>mixNumber(item,b.moonPosition[index],t));
     value.background=a.background.map((item,index)=>mixColor(item,b.background[index],t));
     return value;
   }
@@ -362,6 +453,7 @@ async function init(){
     const sunlightColor=new THREE.Color(value.sunlightColor).lerp(new THREE.Color(seasonLighting.sunTint),seasonLighting.sunBlend);
     const environmentColor=new THREE.Color(value.environmentColor).lerp(new THREE.Color(seasonLighting.environmentTint),seasonLighting.environmentBlend);
     sun.intensity=value.sunlightIntensity;sun.color.copy(sunlightColor);sun.position.fromArray(value.sunPosition);
+    moonLight.intensity=value.moonLightIntensity;moonLight.color.setHex(0x8da8d1);
     hemi.intensity=value.environmentIntensity;hemi.color.copy(environmentColor);hemi.groundColor.setHex(value.groundColor);
     renderer.toneMappingExposure=value.exposure;
     const pulse=value.windowEmission>.1?1+Math.sin(now*.00115)*.035:1;
@@ -374,6 +466,9 @@ async function init(){
     const backgrounds=value.background.map(color=>new THREE.Color(color).lerp(new THREE.Color(seasonLighting.backgroundTint),seasonLighting.backgroundBlend).getHex());
     page.style.setProperty('--rt-bg-a',colorCss(backgrounds[0]));page.style.setProperty('--rt-bg-b',colorCss(backgrounds[1]));page.style.setProperty('--rt-bg-c',colorCss(backgrounds[2]));
     page.style.setProperty('--rt-halo',colorCss(new THREE.Color(value.halo).lerp(new THREE.Color(seasonLighting.sunTint),seasonLighting.sunBlend).getHex()));page.style.setProperty('--rt-halo-opacity',value.haloOpacity.toFixed(3));
+    celestial.sun.position.fromArray(value.sunDiscPosition);celestial.sun.scale.setScalar(value.sunDiscScale);
+    celestial.sunMaterial.uniforms.uColor.value.setHex(value.sunDiscColor).lerp(new THREE.Color(seasonLighting.sunTint),seasonLighting.sunBlend*.35);celestial.sunMaterial.uniforms.uOpacity.value=value.sunDiscOpacity;
+    celestial.moon.position.fromArray(value.moonPosition);celestial.moonMaterial.uniforms.uOpacity.value=value.moonOpacity;celestial.moonMaterial.uniforms.uHaloBoost.value=moonHaloBoost;
   }
   function animateLife(now){
     const seconds=now*.001,night=lighting.nightFactor;
@@ -414,6 +509,7 @@ async function init(){
     if(nextTime!==activeTime){if(!unified)transitionTime(nextTime,true);activeTime=nextTime}
     if(nextSeason!==activeSeason){if(!unified)transitionSeason(nextSeason,true);activeSeason=nextSeason}
     page.dataset.realtimeTime=nextTime;page.dataset.realtimeSeason=nextSeason;
+    scheduleBirthdayEasterEgg();
   }
   page.addEventListener('cottage:statechange',syncState);
   page.addEventListener('cottage:transitionstart',event=>{
@@ -428,7 +524,7 @@ async function init(){
     if(sharedTransition.seasonChanged)seasonLighting=mixSeasonStaggered(sharedTransition.season,seasonProgress);
     if(sharedTransition.seasonChanged){const cameraProgress=window.CottageTransition.easeInOutCubic(window.CottageTransition.range(raw,0,1));camera.position.lerpVectors(sharedTransition.cameraFrom.position,sharedTransition.cameraTo.position,cameraProgress);camera.position.addScaledVector(cameraUp,Math.sin(Math.PI*cameraProgress)*.07);cameraLookTarget.lerpVectors(sharedTransition.cameraFrom.target,sharedTransition.cameraTo.target,cameraProgress);camera.lookAt(cameraLookTarget)}
   });
-  page.addEventListener('cottage:transitionend',event=>{if(sharedTransition?.id===event.detail.id)sharedTransition=null});
+  page.addEventListener('cottage:transitionend',event=>{if(sharedTransition?.id===event.detail.id)sharedTransition=null;scheduleBirthdayEasterEgg()});
 
   page.addEventListener('pointermove',event=>{
     if(reduced.matches)return;
@@ -441,6 +537,26 @@ async function init(){
 
   function setHover(name){hoveredName=name;container.classList.toggle('has-pick',Boolean(name));container.dataset.hoverObject=name||''}
   function cameraPush(){cameraPushTarget=1;clearTimeout(cameraPushTimer);cameraPushTimer=setTimeout(()=>cameraPushTarget=0,520)}
+  function boostMoon(duration=2600){moonHaloBoostTarget=.07;clearTimeout(moonHaloTimer);moonHaloTimer=setTimeout(()=>moonHaloBoostTarget=0,duration)}
+  function showMoonPhaseNote(){moonNote.show('今晚的月亮，是今天真正的月亮。',`${moonPhase.name} · ${moonPhase.percent}%`,3400)}
+  function interactMoon(){
+    if(lighting.moonOpacity<.18)return;cameraPush();
+    const now=performance.now();moonClicks=moonClicks.filter(stamp=>now-stamp<4000);moonClicks.push(now);
+    if(moonClicks.length>=3&&!moonSecretTriggered){
+      moonSecretTriggered=true;moonClicks=[];boostMoon(3000);
+      moonNote.show('我们已经一起看过很多次晚霞，\n也还会一起看很多次月亮。','',6200,0,'secret');
+      return;
+    }
+    showMoonPhaseNote();
+  }
+  function scheduleBirthdayEasterEgg(){
+    clearTimeout(birthdayTimer);if(moonBirthdayTriggered)return;
+    const localNow=new Date();if(localNow.getMonth()!==8||localNow.getDate()!==29||activeTime!=='night')return;
+    birthdayTimer=setTimeout(()=>{
+      if(document.body.classList.contains('prologue-active')||lighting.moonOpacity<.45){scheduleBirthdayEasterEgg();return}
+      moonBirthdayTriggered=true;boostMoon(2700);moonNote.show('又陪你看了一年月亮。','生日快乐。',5200,0,'birthday');
+    },900);
+  }
   function interact(name){
     if(!name)return;cameraPush();
     if(name==='Guitar')window.cottageInteractions?.playSeasonGuitar();
@@ -448,14 +564,16 @@ async function init(){
     else if(name==='Windows')window.cottageInteractions?.awakenWindow();
     else page.dispatchEvent(new CustomEvent('cottage3d:objectclick',{detail:{name}}));
   }
-  canvas.addEventListener('pointermove',event=>setHover(event.pointerType==='touch'?null:picker.pick(event)),{passive:true});
+  canvas.addEventListener('pointermove',event=>setHover(event.pointerType==='touch'?null:(celestial.pickMoon(event,lighting.moonOpacity)?'Moon':picker.pick(event))),{passive:true});
   canvas.addEventListener('pointerleave',()=>setHover(null));
-  canvas.addEventListener('click',event=>interact(picker.pick(event)));
+  canvas.addEventListener('click',event=>{if(celestial.pickMoon(event,lighting.moonOpacity)){interactMoon();return}interact(picker.pick(event))});
   page.addEventListener('cottage:lamp',event=>{lampTarget=event.detail?.on?1:0});
   page.addEventListener('cottage:windowawake',()=>{windowTarget=1;clearTimeout(windowRestoreTimer);windowRestoreTimer=setTimeout(()=>windowTarget=0,2700)});
 
   window.cottage3D={
-    renderer,scene,camera,model,objects:controls,timeOfDay:TIME_OF_DAY,seasons:SEASON_STATE,seasonalObjects,lifeDetails,picker,
+    renderer,scene,camera,model,objects:controls,timeOfDay:TIME_OF_DAY,seasons:SEASON_STATE,seasonalObjects,lifeDetails,picker,celestial,
+    get moonPhase(){return {...moonPhase}},calculateMoonPhase,
+    setMoonDate:value=>{const next=calculateMoonPhase(value);if(!Number.isFinite(next.phase))return false;moonPhase=next;celestial.setPhase(next);return {...next}},
     setTimeOfDay:(name,animate=true)=>transitionTime(name,animate),
     setSeason:(name,animate=true)=>transitionSeason(name,animate),
     setRotation:yaw=>{pointerTarget.yaw=THREE.MathUtils.clamp(yaw,-.07,.07)},
@@ -483,7 +601,7 @@ async function init(){
       const raw=Math.min(1,(now-seasonTransition.start)/seasonTransition.duration);
       seasonLighting=mixSeasonStaggered(seasonTransition,raw);if(raw===1)seasonTransition=null;
     }
-    lampLevel=THREE.MathUtils.damp(lampLevel,lampTarget,4.6,dt);windowLevelInteractive=THREE.MathUtils.damp(windowLevelInteractive,windowTarget,3.8,dt);cameraPushLevel=THREE.MathUtils.damp(cameraPushLevel,cameraPushTarget,5.2,dt);
+    lampLevel=THREE.MathUtils.damp(lampLevel,lampTarget,4.6,dt);windowLevelInteractive=THREE.MathUtils.damp(windowLevelInteractive,windowTarget,3.8,dt);cameraPushLevel=THREE.MathUtils.damp(cameraPushLevel,cameraPushTarget,5.2,dt);moonHaloBoost=THREE.MathUtils.damp(moonHaloBoost,moonHaloBoostTarget,3.2,dt);
     for(const name of Object.keys(highlightMaterials)){
       const target=hoveredName===name?(name==='Guitar'?.18:.075):0;highlightLevel[name]=THREE.MathUtils.damp(highlightLevel[name],target,7,dt);for(const material of highlightMaterials[name])material.emissiveIntensity=highlightLevel[name];
     }

@@ -29,12 +29,20 @@
 - `windowEmission`：窗户发光
 - `porchEmission`：门廊灯发光
 - `background / halo / haloOpacity`：网页背景与模型环境光晕
+- `sunDiscOpacity / sunDiscPosition / sunDiscColor`：可见太阳的位置、颜色和透明度
+- `moonOpacity / moonPosition / moonLightIntensity`：月亮与极弱月光
 - `SEASON_TRANSITION_MS`：季节过渡时长
 - `SEASON_STATE.spring / summer / autumn / winter`：树冠、地面、环境色和季节点缀参数
 
 季节附加元素由运行时低成本几何生成：春花和秋叶分别使用一个 `InstancedMesh`，冬季使用一个雪地层和一个从现有屋顶向上表面提取的雪层。Weather 仍是独立 HTML 粒子层，可与任意季节和时段组合。
 
 实时模式会先显示“小屋正在醒来。”，模型准备完成后再淡入序章；若模型或 WebGL 不可用，会静默回到原静态版本。冬季树冠由同一棵树的叶团 Morph 逐步减少，`Tree_Trunk` 与整棵树的缩放始终保持不变。
+
+## 太阳、月亮与真实月相
+
+`realtime3d.js` 顶部的 `calculateMoonPhase()` 使用本地日期、儒略日和朔望月计算连续月相，不请求定位或远程 API。`createCelestialSystem()` 使用两个低成本 Shader 平面绘制风格化太阳和月亮；月球明暗分界由球面法线、柔和弧形 terminator 与低频表面明暗连续生成，不依赖月相图片。
+
+Day / Sunset / Night 的太阳位置、颜色、透明度、月亮透明度和冷色月光都在 `TIME_OF_DAY` 内，并由现有统一 transition timeline 插值。点击月亮会显示当前月相；四秒内三击会触发隐藏文案。每年 9 月 29 日第一次进入 Night 时会显示一次生日彩蛋。调试不同日期可在预览地址后增加 `&moonDate=2026-10-26`，正式访问不带参数时始终读取浏览器当前日期。
 
 ## 统一过渡时间轴
 

@@ -8,6 +8,7 @@
 .page.realtime-3d-ready .realtime-3d{opacity:1}
 .page.realtime-3d-ready .realtime-3d{pointer-events:auto}
 .page.realtime-3d-ready .realtime-3d.has-pick canvas{cursor:pointer}
+.moon-note{position:absolute;z-index:7;right:7%;top:15%;max-width:270px;margin:0;padding:9px 13px;border:1px solid rgba(225,231,238,.13);border-radius:15px;background:rgba(18,25,39,.28);backdrop-filter:blur(8px);color:rgba(242,237,220,.88);font-family:'Songti SC','Noto Serif CJK SC',serif;font-size:12px;line-height:1.72;letter-spacing:.035em;white-space:pre-line;text-align:right;opacity:0;transform:translateY(7px);pointer-events:none;transition:opacity .7s ease,transform .7s ease,background .9s ease}.moon-note.show{opacity:1;transform:translateY(0)}.moon-note small{display:block;margin-top:4px;font-family:Georgia,serif;font-size:9px;font-style:italic;letter-spacing:.07em;color:rgba(222,229,240,.62)}.moon-note[data-kind="birthday"],.moon-note[data-kind="secret"]{background:rgba(18,25,39,.2)}
 .page.realtime-3d-ready{background:radial-gradient(ellipse at 84% 72%,var(--rt-bg-c,#b7c5ae) 0,transparent 58%),linear-gradient(120deg,var(--rt-bg-a,#b8c2ad),var(--rt-bg-b,#cbc9b7) 54%,var(--rt-bg-c,#b7c5ae))}
 .page.realtime-3d-ready .realtime-3d-status{opacity:0}
 .house-breath{transition:filter 1.35s ease-in-out,opacity .72s ease-in-out}
@@ -17,5 +18,5 @@
 .page.realtime-3d-fallback .realtime-3d{display:none}
 .realtime-loading-overlay{position:fixed;inset:0;z-index:40;display:grid;place-content:center;justify-items:center;gap:12px;background:#151a24;color:#eadfcf;opacity:0;transition:opacity .55s ease;pointer-events:auto}.realtime-loading-overlay.show{opacity:1}.realtime-loading-overlay.done{pointer-events:none}.realtime-loading-overlay p{margin:0;font-family:'Songti SC','Noto Serif CJK SC',serif;font-size:14px;letter-spacing:.16em}.realtime-loading-mark{font-size:25px;color:#dfc28f;animation:loading-breathe 2.4s ease-in-out infinite}.realtime-loading-active .prologue-first,.realtime-loading-active .prologue-home,.realtime-loading-active .prologue-birthday,.realtime-loading-active .home-button{animation-play-state:paused!important}
 @keyframes loading-breathe{0%,100%{opacity:.42;transform:translateY(1px)}50%{opacity:.9;transform:translateY(-1px)}}
-@media(max-width:767px){.realtime-3d-status{bottom:8%;font-size:8px}.realtime-3d{inset:-3% -2% -1%}}
-@media(prefers-reduced-motion:reduce){.realtime-3d,.realtime-3d-status,.house-breath{transition-duration:.12s!important}}
+@media(max-width:767px){.realtime-3d-status{bottom:8%;font-size:8px}.realtime-3d{inset:-3% -2% -1%}.moon-note{right:6%;top:10%;max-width:205px;padding:7px 10px;font-size:10px;line-height:1.6}.moon-note small{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.realtime-3d,.realtime-3d-status,.house-breath,.moon-note{transition-duration:.12s!important}}

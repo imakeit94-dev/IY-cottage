@@ -49,7 +49,7 @@ musicButton.addEventListener('click',async()=>{
 });
 
 function pulse(button){button.classList.remove('pulse');void button.offsetWidth;button.classList.add('pulse');setTimeout(()=>button.classList.remove('pulse'),750)}
-let guitarRequest=0,knownSeason=season,lastGuitarAt=0;
+let guitarRequest=0,knownSeason=season,lastGuitarAt=-Infinity;
 function fadeGuitar(id,duration=180){return new Promise(resolve=>{
   if(guitarSound.paused||!guitarSound.currentTime){resolve(true);return}
   const started=performance.now(),initial=guitarSound.volume;
