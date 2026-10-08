@@ -25,6 +25,7 @@ const bg=document.createElement('div');bg.className='ambient-layer';bg.setAttrib
 const status=document.createElement('div');status.className='motion-status';status.setAttribute('role','status');root.append(status);
 const textParts=[text.querySelector('.eyebrow'),text.querySelector('h1'),text.querySelector('.body'),text.querySelector('.personal')];
 
+const firstSeason=season,firstTime=time;
 let requestedSeason=season,requestedTime=time,weatherState=params.get('weather')==='on'?'on':'off';
 let revision=0,weatherRevision=0,animations=[];
 
@@ -149,6 +150,6 @@ let frame=0;root.addEventListener('pointermove',e=>{if(reduced.matches||e.pointe
 root.addEventListener('pointerleave',()=>{visual.style.setProperty('--px','0px');visual.style.setProperty('--py','0px')});
 document.addEventListener('visibilitychange',()=>document.documentElement.classList.toggle('motion-paused',document.hidden));
 reduced.addEventListener('change',()=>{revision++;cancel();bg.style.opacity='0';season=requestedSeason;time=requestedTime;update();syncTree();refreshWeather(false);root.dataset.state=`${season}_${time}`;visual.style.setProperty('--px','0px');visual.style.setProperty('--py','0px')});
-window.cottageEnterState=()=>{if(weatherState!=='off')setWeather('off');return select('spring','night')};
+window.cottageEnterState=()=>{if(weatherState!=='off')setWeather('off');return select(firstSeason,firstTime)};
 setLayout(layoutFor(season));syncTree();syncWeatherButtons();refreshWeather(false);root.dataset.state=`${season}_${time}`;
 })();

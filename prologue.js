@@ -15,6 +15,6 @@ button.addEventListener('click',async()=>{
   prologue.classList.add('arrived');
   await wait(reduced.matches?160:980);
   prologue.hidden=true;document.body.classList.remove('prologue-active');
-  document.querySelector('[data-season="spring"]')?.focus({preventScroll:true});
+  document.querySelector('[data-season][aria-pressed="true"]')?.focus({preventScroll:true});
 });
 })();
