@@ -31,7 +31,9 @@ const TIME_TRANSITION_MS=2100;
 const SEASON_TRANSITION_MS=1650;
 const TIME_OF_DAY={
   day:{
-    sunlightIntensity:3.15,sunlightColor:0xffdfae,sunPosition:[-10,16,-12],
+    // Screen-right, high daylight. The light travels back toward the cottage,
+    // so the house, tree and fence shadows fall toward screen-left.
+    sunlightIntensity:3.15,sunlightColor:0xffdfae,sunPosition:[12,15,-8],sunShadowSoftness:1.35,
     environmentIntensity:2.15,environmentColor:0xf5edda,groundColor:0x53645a,
     exposure:1.05,windowEmission:.012,windowColor:0xffd6a0,porchEmission:0,porchColor:0xffbc69,
     windowLight:0,porchLight:0,cameraYaw:-.014,
@@ -39,15 +41,17 @@ const TIME_OF_DAY={
     sunDiscOpacity:.78,sunDiscScale:1,sunDiscColor:0xffe2aa,sunDiscPosition:[7.7,7.5,-72],moonOpacity:0,moonPosition:[8.2,7.1,-70],moonLightIntensity:0
   },
   sunset:{
-    sunlightIntensity:2.55,sunlightColor:0xff7548,sunPosition:[-15,5.2,-10],
+    // Screen-left, low sunset. Its lower angle creates longer shadows that
+    // travel toward screen-right while preserving the warm red-orange light.
+    sunlightIntensity:2.55,sunlightColor:0xff7548,sunPosition:[-16,4.4,-8],sunShadowSoftness:3.4,
     environmentIntensity:1.3,environmentColor:0xd99179,groundColor:0x514151,
     exposure:1.0,windowEmission:.46,windowColor:0xffad59,porchEmission:.36,porchColor:0xffa851,
     windowLight:12,porchLight:9,cameraYaw:.025,
     background:[0x503744,0x754759,0x9d6670],halo:0xffa85c,haloOpacity:.26,fogColor:0x74505c,fogDensity:.0065,homeActivity:.76,nightFactor:.36,
-    sunDiscOpacity:.92,sunDiscScale:1.08,sunDiscColor:0xf15f3b,sunDiscPosition:[10.8,3.6,-72],moonOpacity:.025,moonPosition:[8.15,7.05,-70],moonLightIntensity:.025
+    sunDiscOpacity:.92,sunDiscScale:1.08,sunDiscColor:0xf15f3b,sunDiscPosition:[-10.4,3.35,-72],moonOpacity:.025,moonPosition:[8.15,7.05,-70],moonLightIntensity:.025
   },
   night:{
-    sunlightIntensity:.42,sunlightColor:0x809dca,sunPosition:[-8,8,-7],
+    sunlightIntensity:.42,sunlightColor:0x809dca,sunPosition:[-8,8,-7],sunShadowSoftness:1,
     environmentIntensity:.58,environmentColor:0x31486d,groundColor:0x14243a,
     exposure:.91,windowEmission:1.3,windowColor:0xffc36b,porchEmission:1.15,porchColor:0xffb45d,
     windowLight:30,porchLight:20,cameraYaw:0,
@@ -410,7 +414,7 @@ async function init(){
   function mixColor(a,b,t){return new THREE.Color(a).lerp(new THREE.Color(b),t).getHex()}
   function mixLighting(a,b,t){
     const value={};
-    for(const key of ['sunlightIntensity','environmentIntensity','exposure','windowEmission','porchEmission','windowLight','porchLight','cameraYaw','haloOpacity','fogDensity','homeActivity','nightFactor','sunDiscOpacity','sunDiscScale','moonOpacity','moonLightIntensity'])value[key]=mixNumber(a[key],b[key],t);
+    for(const key of ['sunlightIntensity','sunShadowSoftness','environmentIntensity','exposure','windowEmission','porchEmission','windowLight','porchLight','cameraYaw','haloOpacity','fogDensity','homeActivity','nightFactor','sunDiscOpacity','sunDiscScale','moonOpacity','moonLightIntensity'])value[key]=mixNumber(a[key],b[key],t);
     for(const key of ['sunlightColor','environmentColor','groundColor','windowColor','porchColor','halo','fogColor','sunDiscColor'])value[key]=mixColor(a[key],b[key],t);
     value.sunPosition=a.sunPosition.map((item,index)=>mixNumber(item,b.sunPosition[index],t));
     value.sunDiscPosition=a.sunDiscPosition.map((item,index)=>mixNumber(item,b.sunDiscPosition[index],t));
@@ -453,6 +457,7 @@ async function init(){
     const sunlightColor=new THREE.Color(value.sunlightColor).lerp(new THREE.Color(seasonLighting.sunTint),seasonLighting.sunBlend);
     const environmentColor=new THREE.Color(value.environmentColor).lerp(new THREE.Color(seasonLighting.environmentTint),seasonLighting.environmentBlend);
     sun.intensity=value.sunlightIntensity;sun.color.copy(sunlightColor);sun.position.fromArray(value.sunPosition);
+    if(renderer.shadowMap.enabled)sun.shadow.radius=value.sunShadowSoftness;
     moonLight.intensity=value.moonLightIntensity;moonLight.color.setHex(0x8da8d1);
     hemi.intensity=value.environmentIntensity;hemi.color.copy(environmentColor);hemi.groundColor.setHex(value.groundColor);
     renderer.toneMappingExposure=value.exposure;
