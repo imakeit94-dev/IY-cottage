@@ -101,7 +101,7 @@ function fallback(error){
   console.warn('Realtime cottage unavailable; static fallback retained.',error);
   page.classList.remove('realtime-3d-loading','realtime-3d-ready');page.classList.add('realtime-3d-fallback');
   page.dataset.webgl='fallback';status.textContent='Static cottage restored';
-  document.querySelectorAll('[data-static-only]').forEach(el=>{el.inert=false;delete el.dataset.staticOnly});
+  document.querySelectorAll('[data-static-only]').forEach(el=>{el.inert=false;delete el.dataset.staticOnly});document.querySelector('.moon-hotspot')?.remove();
   hideLoading();
 }
 
@@ -579,12 +579,16 @@ async function init(){
   // Keyboard access in 3D: guitar / porch light / window keep their DOM buttons (same actions as a canvas click),
   // shown only on focus and pinned to the projected 3D object. Static-only book hotspots leave the tab order.
   document.querySelectorAll('.shelf-hotspot,.table-book-hotspot,.bookmark-note,.shelf-secret').forEach(el=>{el.inert=true;el.dataset.staticOnly=''});
-  const keyboardHotspots=[['Guitar','.guitar-hotspot'],['Porch_Light','.lamp-hotspot'],['Windows','.window-hotspot']].map(([name,selector])=>[name,document.querySelector(selector)]).filter(([name,el])=>el&&controls[name]);
+  // The moon only exists in 3D, so its keyboard button is created here and only offered while the moon is clickable.
+  const moonButton=document.createElement('button');moonButton.type='button';moonButton.className='scene-hotspot moon-hotspot';moonButton.setAttribute('aria-label','看看今晚的月亮');moonButton.innerHTML='<span aria-hidden="true">☾</span>';moonButton.hidden=true;
+  moonButton.addEventListener('click',interactMoon);document.querySelector('.scene-interactions')?.append(moonButton);
+  const hotspotObjects={...controls,Moon:celestial.moon};
+  const keyboardHotspots=[['Guitar','.guitar-hotspot'],['Porch_Light','.lamp-hotspot'],['Windows','.window-hotspot'],['Moon','.moon-hotspot']].map(([name,selector])=>[name,document.querySelector(selector)]).filter(([name,el])=>el&&hotspotObjects[name]);
   keyboardHotspots.forEach(([name,el])=>{el.addEventListener('focus',()=>setHover(name));el.addEventListener('blur',()=>setHover(null))});
   const hotspotBox=new THREE.Box3(),hotspotPoint=new THREE.Vector3();
   function placeFocusedHotspot(){
     const entry=keyboardHotspots.find(([,el])=>el===document.activeElement);if(!entry||!entry[1].offsetParent)return;
-    hotspotBox.setFromObject(controls[entry[0]]).getCenter(hotspotPoint).project(camera);
+    hotspotBox.setFromObject(hotspotObjects[entry[0]]).getCenter(hotspotPoint).project(camera);
     const rect=canvas.getBoundingClientRect(),layer=entry[1].offsetParent.getBoundingClientRect();
     entry[1].style.left=`${rect.left-layer.left+(hotspotPoint.x+1)*rect.width/2}px`;entry[1].style.top=`${rect.top-layer.top+(1-hotspotPoint.y)*rect.height/2}px`;
   }
@@ -630,6 +634,7 @@ async function init(){
     pointerCurrent.yaw=THREE.MathUtils.damp(pointerCurrent.yaw,pointerTarget.yaw,3.0,dt);pointerCurrent.pitch=THREE.MathUtils.damp(pointerCurrent.pitch,pointerTarget.pitch,3.0,dt);
     if(!reduced.matches){model.rotation.y=lighting.cameraYaw+seasonLighting.cameraDrift+pointerCurrent.yaw;model.rotation.x=pointerCurrent.pitch;model.position.y=baseY+Math.sin(now*.00067)*.018}else{model.rotation.y=lighting.cameraYaw+seasonLighting.cameraDrift;model.rotation.x=0;model.position.y=baseY}
     const nextZoom=seasonLighting.compositionScale+cameraPushLevel*.026;if(Math.abs(camera.zoom-nextZoom)>.0001){camera.zoom=nextZoom;camera.updateProjectionMatrix()}
+    const moonClickable=lighting.moonOpacity>=.18;if(moonButton.hidden===moonClickable)moonButton.hidden=!moonClickable;
     placeFocusedHotspot();
     renderer.render(scene,camera);
   }
